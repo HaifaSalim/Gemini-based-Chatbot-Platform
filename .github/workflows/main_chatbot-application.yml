@@ -50,4 +50,4 @@ jobs:
           app-name: 'Chatbot-Application'
           slot-name: 'Production'
           package: '*.jar'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_8E09A5BE217642D1B7085E0D4C5A0960 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E93809E73C294FE5B7687ADF76125F51 }}
