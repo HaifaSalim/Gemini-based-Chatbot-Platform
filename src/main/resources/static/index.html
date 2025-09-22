@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Gemini-based Chatbot Platform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      background: linear-gradient(135deg, #9babf5 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h2 {
+      text-align: center;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .box {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    input,
+    button,
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+    }
+
+    #chatLog {
+      border: 1px solid #ddd;
+      height: 300px;
+      overflow-y: auto;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 5px;
+    }
+
+    .user-message {
+      background: #e3f2fd;
+      text-align: right;
+    }
+
+    .bot-message {
+      background: #f3e5f5;
+    }
+
+    .status {
+      text-align: center;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .project-item {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .project-item:hover {
+      background: #e9ecef;
+    }
+
+    .project-item.selected {
+      background: #cce5ff;
+      border-color: #0066cc;
+    }
+
+    .user-info {
+      background: #e8f5e8;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .flex-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .flex-container button {
+      flex: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>A Gemini-based Chatbot Platform</h2>
+
+  <div id="authSection">
+    <div class="box">
+      <h3>Register</h3>
+      <input id="regEmail" type="email" placeholder="Email" required>
+      <input id="regPass" type="password" placeholder="Password" required>
+      <button onclick="register()">Register</button>
+    </div>
+
+    <div class="box">
+      <h3>Login</h3>
+      <input id="logEmail" type="email" placeholder="Email" required>
+      <input id="logPass" type="password" placeholder="Password" required>
+      <button onclick="login()">Login</button>
+    </div>
+  </div>
+
+  <div id="statusDiv"></div>
+
+  <div id="mainSection" class="hidden">
+    <div class="box">
+      <div class="user-info" id="userInfo"></div>
+      <div class="flex-container">
+        <button onclick="logout()" class="btn-danger">Logout</button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Create New Project/Agent</h3>
+      <input id="projectName" type="text" placeholder="Project Name" required>
+      <textarea id="projectDescription" placeholder="Project Description (optional)"></textarea>
+      <button onclick="createProject()">Create Project</button>
+    </div>
+
+    <div class="box">
+      <h3>My Projects</h3>
+      <div id="projectsList">
+        <p style="color: #666; text-align: center; font-style: italic;">Loading projects...</p>
+      </div>
+      <button onclick="loadProjects()">Refresh Projects</button>
+    </div>
+
+    <div class="box">
+      <h3>Prompts</h3>
+      <textarea id="promptContent" placeholder="Enter a prompt"></textarea>
+      <button onclick="addPrompt()">Add Prompt</button>
+      <div id="promptsList">
+        <p style="color: #666; text-align: center; font-style: italic;">Select a project to view prompts...</p>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Chat</h3>
+      <div id="selectedProjectInfo"
+        style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: none;">
+        <strong>Selected Project:</strong> <span id="selectedProjectName">None</span>
+      </div>
+      <div id="chatLog">
+        <p style="color: #666; text-align: center; font-style: italic;">Select a project to start chatting...</p>
+      </div>
+      <input id="userMessage" placeholder="Select a project first..." onkeypress="handleKeyPress(event)" disabled>
+      <button onclick="sendMessage()" id="sendBtn" disabled>Send Message</button>
+    </div>
+  </div>
+
+  <script>
+    let token = "";
+    let isLoggedIn = false;
+    let currentUser = null;
+    let selectedProject = null;
+
+    function showStatus(message, isError = false) {
+      const statusDiv = document.getElementById("statusDiv");
+      statusDiv.innerHTML = `<div class="status ${isError ? 'error' : 'success'}">${message}</div>`;
+      setTimeout(() => { statusDiv.innerHTML = ""; }, 5000);
+    }
+
+    function updateUI() {
+      const authSection = document.getElementById("authSection");
+      const mainSection = document.getElementById("mainSection");
+      const userInfo = document.getElementById("userInfo");
+      if (isLoggedIn && currentUser) {
+        authSection.classList.add("hidden");
+        mainSection.classList.remove("hidden");
+        userInfo.innerHTML = `<strong>Welcome:</strong> ${currentUser.email}`;
+        loadProjects();
+      } else {
+        authSection.classList.remove("hidden");
+        mainSection.classList.add("hidden");
+        selectedProject = null;
+        updateChatState();
+      }
+    }
+
+    function updateChatState() {
+      const sendBtn = document.getElementById("sendBtn");
+      const userMessage = document.getElementById("userMessage");
+      const selectedProjectInfo = document.getElementById("selectedProjectInfo");
+      const selectedProjectName = document.getElementById("selectedProjectName");
+      if (isLoggedIn && selectedProject) {
+        sendBtn.disabled = false;
+        userMessage.disabled = false;
+        userMessage.placeholder = "Type your message...";
+        selectedProjectInfo.style.display = "block";
+        selectedProjectName.textContent = selectedProject.name;
+        document.getElementById("chatLog").innerHTML = "<p style='color: #666; text-align: center; font-style: italic;'>You can now start chatting with this project!</p>";
+      } else if (isLoggedIn) {
+        sendBtn.disabled = true;
+        userMessage.disabled = true;
+        userMessage.placeholder = "Select a project first...";
+        selectedProjectInfo.style.display = "none";
+        document.getElementById("chatLog").innerHTML = "<p style='color: #666; text-align: center; font-style: italic;'>Select a project to start chatting...</p>";
+      } else {
+        sendBtn.disabled = true;
+        userMessage.disabled = true;
+        userMessage.placeholder = "Please login first...";
+        selectedProjectInfo.style.display = "none";
+      }
+    }
+
+    async function register() {
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPass").value.trim();
+      if (!email || !password) { showStatus("Please fill in all fields", true); return; }
+      if (!isValidEmail(email)) { showStatus("Please enter a valid email address", true); return; }
+      if (password.length < 6) { showStatus("Password must be at least 6 characters long", true); return; }
+      try {
+        const res = await fetch("http://localhost:8080/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          token = data.token; currentUser = data.user || { email }; isLoggedIn = true;
+          showStatus("Registration successful! You are now logged in.");
+          document.getElementById("regEmail").value = ""; document.getElementById("regPass").value = "";
+          updateUI();
+        } else {
+          const errorData = await res.json().catch(() => ({ error: 'Registration failed' }));
+          let errorMessage = res.status === 409 || res.status === 400 ? (errorData.error || 'User already exists or invalid data') :
+            res.status === 500 ? 'Server error. Please try again later.' : 'Registration failed';
+          showStatus(errorMessage, true);
+        }
+      } catch (error) { showStatus("Network error: Unable to connect to server.", true); }
+    }
+
+    async function login() {
+      const email = document.getElementById("logEmail").value.trim();
+      const password = document.getElementById("logPass").value.trim();
+      if (!email || !password) { showStatus("Please fill in all fields", true); return; }
+      if (!isValidEmail(email)) { showStatus("Please enter a valid email address", true); return; }
+      try {
+        const res = await fetch("http://localhost:8080/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          token = data.token; currentUser = data.user || { email }; isLoggedIn = true;
+          showStatus("Login successful!");
+          document.getElementById("logEmail").value = ""; document.getElementById("logPass").value = "";
+          updateUI();
+        } else {
+          let errorMessage = res.status === 401 ? 'Invalid email or password' :
+            res.status === 404 ? 'User not found' :
+              res.status === 500 ? 'Server error. Please try again later.' : 'Login failed';
+          showStatus(errorMessage, true);
+        }
+      } catch (error) { showStatus("Network error: Unable to connect to server.", true); }
+    }
+
+    function logout() {
+      token = ""; isLoggedIn = false; currentUser = null; selectedProject = null;
+      showStatus("Logged out successfully!"); updateUI();
+    }
+
+    async function createProject() {
+      const name = document.getElementById("projectName").value.trim();
+      const description = document.getElementById("projectDescription").value.trim();
+      if (!name) { showStatus("Please enter a project name", true); return; }
+      if (!token || !isLoggedIn) { showStatus("Please login first!", true); return; }
+      try {
+        const res = await fetch("http://localhost:8080/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+          body: JSON.stringify({ name, description })
+        });
+        if (res.ok) {
+          showStatus(`Project "${name}" created successfully!`);
+          document.getElementById("projectName").value = ""; document.getElementById("projectDescription").value = "";
+          loadProjects();
+        } else {
+          showStatus("Failed to create project", true);
+        }
+      } catch (error) { showStatus("Network error: Unable to create project.", true); }
+    }
+
+    async function loadProjects() {
+      if (!token || !isLoggedIn) return;
+      const projectsList = document.getElementById("projectsList");
+      projectsList.innerHTML = "<p style='color: #666; text-align: center; font-style: italic;'>Loading projects...</p>";
+      try {
+        const res = await fetch("http://localhost:8080/projects/my-projects", { headers: { "Authorization": "Bearer " + token } });
+        if (res.ok) {
+          const projects = await res.json();
+          const projectsArray = Array.isArray(projects) ? projects : [projects];
+          let html = "";
+          projectsArray.forEach(project => {
+            if (project) {
+              const isSelected = selectedProject && selectedProject.id === project.id;
+              html += `<div class="project-item ${isSelected ? 'selected' : ''}" onclick="selectProject(${project.id}, '${escapeHtml(project.name)}')">
+                        <strong>${escapeHtml(project.name)}</strong>
+                        ${project.description ? `<br><small>${escapeHtml(project.description)}</small>` : ''}
+                      </div>`;
+            }
+          });
+          projectsList.innerHTML = html || "<p style='color: #666; text-align: center; font-style: italic;'>No projects available.</p>";
+        } else {
+          projectsList.innerHTML = "<p style='color: #ff6b6b; text-align: center;'>Failed to load projects.</p>";
+        }
+      } catch (error) {
+        projectsList.innerHTML = "<p style='color: #ff6b6b; text-align: center;'>Network error.</p>";
+      }
+    }
+
+    function selectProject(id, name) {
+      selectedProject = { id, name }; updateChatState();
+      document.querySelectorAll('.project-item').forEach(item => item.classList.remove('selected'));
+      event.target.closest('.project-item').classList.add('selected');
+      showStatus(`Selected project: ${name}`);
+      loadPrompts();
+    }
+
+    async function sendMessage() {
+      if (!token || !isLoggedIn) { showStatus("Please login first!", true); return; }
+      if (!selectedProject) { showStatus("Please select a project first!", true); return; }
+      const messageInput = document.getElementById("userMessage");
+      const message = messageInput.value.trim();
+      if (!message) { showStatus("Please enter a message", true); return; }
+      const chatLog = document.getElementById("chatLog");
+      chatLog.innerHTML += `<div class="message user-message"><strong>You:</strong> ${escapeHtml(message)}</div>`;
+      messageInput.value = ""; chatLog.scrollTop = chatLog.scrollHeight;
+      chatLog.innerHTML += `<div class="message bot-message" id="typing"><strong>Bot:</strong> <em>Typing...</em></div>`;
+      chatLog.scrollTop = chatLog.scrollHeight;
+      try {
+        const res = await fetch("http://localhost:8080/api/chat/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+          body: JSON.stringify({ message, projectId: selectedProject.id })
+        });
+        const typingEl = document.getElementById("typing"); if (typingEl) typingEl.remove();
+        if (res.ok) {
+          const data = await res.json();
+          chatLog.innerHTML += `<div class="message bot-message"><strong>Bot:</strong> ${escapeHtml(data.reply)}</div>`;
+        } else {
+          chatLog.innerHTML += `<div class="message bot-message"><strong>Error:</strong> Failed to get response</div>`;
+        }
+      } catch (error) {
+        const typingEl = document.getElementById("typing"); if (typingEl) typingEl.remove();
+        chatLog.innerHTML += `<div class="message bot-message"><strong>Network Error:</strong> Unable to send message.</div>`;
+      }
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div'); div.textContent = text; return div.innerHTML;
+    }
+
+    async function addPrompt() {
+      if (!selectedProject) {
+        showStatus("Please select a project first!", true);
+        return;
+      }
+
+      const content = document.getElementById("promptContent").value.trim();
+      if (!content) {
+        showStatus("Prompt cannot be empty", true);
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:8080/prompts/${selectedProject.id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({ content })
+        });
+
+        if (res.ok) {
+          const savedPrompt = await res.json();
+          document.getElementById("promptContent").value = "";
+          showStatus("Prompt added successfully!");
+
+          await loadPrompts();
+        } else if (res.status === 404) {
+          showStatus("Project not found. Please refresh and try again.", true);
+          loadProjects();
+        } else if (res.status === 400) {
+          showStatus("Invalid prompt data", true);
+        } else {
+          showStatus("Failed to add prompt", true);
+        }
+      } catch (err) {
+        console.error("Error adding prompt:", err);
+        showStatus("Network error adding prompt", true);
+      }
+    }
+
+    async function loadPrompts() {
+      if (!selectedProject) {
+        document.getElementById("promptsList").innerHTML =
+          "<p style='color: #666; text-align: center; font-style: italic;'>Select a project to view prompts...</p>";
+        return;
+      }
+
+      document.getElementById("promptsList").innerHTML =
+        "<p style='color: #666; text-align: center; font-style: italic;'>Loading prompts...</p>";
+
+      try {
+        const res = await fetch(`http://localhost:8080/prompts/${selectedProject.id}`, {
+          headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (res.ok) {
+          const prompts = await res.json();
+          const list = document.getElementById("promptsList");
+
+          if (!prompts || prompts.length === 0) {
+            list.innerHTML = "<p style='color: #666; text-align: center; font-style: italic;'>No prompts yet. Add your first prompt above!</p>";
+          } else {
+            let promptsHtml = "";
+            prompts.forEach((prompt, index) => {
+              promptsHtml += `
+            <div class="project-item" style="background: #f8f9fe; border-left: 4px solid #667eea;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1;">
+                  <strong>Prompt #${index + 1}</strong>
+                  <div style="margin-top: 8px; color: #555; word-wrap: break-word;">
+                    ${escapeHtml(prompt.content)}
+                  </div>
+                </div>
+                <small style="color: #888; margin-left: 10px;">
+                  ID: ${prompt.id}
+                </small>
+              </div>
+            </div>`;
+            });
+            list.innerHTML = promptsHtml;
+          }
+        } else if (res.status === 404) {
+          document.getElementById("promptsList").innerHTML =
+            "<p style='color: #ff6b6b; text-align: center;'>Project not found. Please select a valid project.</p>";
+        } else {
+          document.getElementById("promptsList").innerHTML =
+            "<p style='color: #ff6b6b; text-align: center;'>Failed to load prompts.</p>";
+        }
+      } catch (err) {
+        console.error("Error loading prompts:", err);
+        document.getElementById("promptsList").innerHTML =
+          "<p style='color: #ff6b6b; text-align: center;'>Network error loading prompts.</p>";
+      }
+    }
+    updateUI();
+  </script>
+</body>
+
+</html>
