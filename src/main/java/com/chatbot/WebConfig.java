@@ -14,7 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
 	    return new WebMvcConfigurer() {
 	        @Override
 	        public void addCorsMappings(CorsRegistry registry) {
-	            registry.addMapping("/**").allowedOrigins("https://gemini-based-chatbot-eqczbbf3dthkg2fr.uaenorth-01.azurewebsites.net/"); 
+	            registry.addMapping("/**").allowedOrigins("https://gemini-based-chatbot-eqczbbf3dthkg2fr.uaenorth-01.azurewebsites.net"); 
 	        }
 	    };
 	}}
