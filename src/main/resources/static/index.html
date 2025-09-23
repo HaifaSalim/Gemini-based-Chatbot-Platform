@@ -233,9 +233,6 @@
   </div>
 
   <script>
-    // Configuration - UPDATE THIS URL TO YOUR AZURE BACKEND
-    const API_BASE_URL = "https://gemini-based-chatbot-eqczbbf3dthkg2fr.uaenorth-01.azurewebsites.net";
-    
     let token = "";
     let isLoggedIn = false;
     let currentUser = null;
@@ -297,7 +294,7 @@
       if (!isValidEmail(email)) { showStatus("Please enter a valid email address", true); return; }
       if (password.length < 6) { showStatus("Password must be at least 6 characters long", true); return; }
       try {
-        const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        const res = await fetch("http://localhost:8080/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
@@ -323,7 +320,7 @@
       if (!email || !password) { showStatus("Please fill in all fields", true); return; }
       if (!isValidEmail(email)) { showStatus("Please enter a valid email address", true); return; }
       try {
-        const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        const res = await fetch("http://localhost:8080/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
@@ -354,7 +351,7 @@
       if (!name) { showStatus("Please enter a project name", true); return; }
       if (!token || !isLoggedIn) { showStatus("Please login first!", true); return; }
       try {
-        const res = await fetch(`${API_BASE_URL}/projects`, {
+        const res = await fetch("http://localhost:8080/projects", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
           body: JSON.stringify({ name, description })
@@ -374,7 +371,7 @@
       const projectsList = document.getElementById("projectsList");
       projectsList.innerHTML = "<p style='color: #666; text-align: center; font-style: italic;'>Loading projects...</p>";
       try {
-        const res = await fetch(`${API_BASE_URL}/projects/my-projects`, { headers: { "Authorization": "Bearer " + token } });
+        const res = await fetch("http://localhost:8080/projects/my-projects", { headers: { "Authorization": "Bearer " + token } });
         if (res.ok) {
           const projects = await res.json();
           const projectsArray = Array.isArray(projects) ? projects : [projects];
@@ -417,7 +414,7 @@
       chatLog.innerHTML += `<div class="message bot-message" id="typing"><strong>Bot:</strong> <em>Typing...</em></div>`;
       chatLog.scrollTop = chatLog.scrollHeight;
       try {
-        const res = await fetch(`${API_BASE_URL}/api/chat/send`, {
+        const res = await fetch("http://localhost:8080/api/chat/send", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
           body: JSON.stringify({ message, projectId: selectedProject.id })
@@ -461,7 +458,7 @@
       }
 
       try {
-        const res = await fetch(`${API_BASE_URL}/prompts/${selectedProject.id}`, {
+        const res = await fetch(`http://localhost:8080/prompts/${selectedProject.id}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -501,7 +498,7 @@
         "<p style='color: #666; text-align: center; font-style: italic;'>Loading prompts...</p>";
 
       try {
-        const res = await fetch(`${API_BASE_URL}/prompts/${selectedProject.id}`, {
+        const res = await fetch(`http://localhost:8080/prompts/${selectedProject.id}`, {
           headers: { "Authorization": "Bearer " + token }
         });
 
